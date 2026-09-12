@@ -1,0 +1,223 @@
+@import 'katex/dist/katex.min.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  background: #0c0c0c;
+  color: #d7e2ea;
+  font-family: 'Kanit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+::selection {
+  background: #b600a8;
+  color: #fff;
+}
+
+.hero-heading {
+  background: linear-gradient(180deg, #646973 0%, #bbccd7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text {
+  background: linear-gradient(123deg, #18011f 7%, #b600a8 37%, #7621b0 72%, #be4c00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hide scrollbar where not needed but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ── Lenis smooth-scroll ─────────────────────────────────────── */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* ── Markdown chat bubbles ───────────────────────────────────── */
+.bikash-md {
+  font-size: 13px;
+  line-height: 1.55;
+  color: #d7e2ea;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+.bikash-md > * + * {
+  margin-top: 6px;
+}
+.bikash-md p {
+  margin: 0;
+}
+.bikash-md ul,
+.bikash-md ol {
+  padding-left: 1.25rem;
+  margin: 4px 0;
+}
+.bikash-md ul {
+  list-style: disc;
+}
+.bikash-md ol {
+  list-style: decimal;
+}
+.bikash-md li + li {
+  margin-top: 2px;
+}
+.bikash-md h1,
+.bikash-md h2,
+.bikash-md h3 {
+  font-weight: 700;
+  margin-top: 8px;
+  letter-spacing: -0.01em;
+}
+.bikash-md h1 { font-size: 1.05rem; }
+.bikash-md h2 { font-size: 1rem; }
+.bikash-md h3 { font-size: 0.95rem; }
+.bikash-md a {
+  color: #f0a8e6;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bikash-md a:hover {
+  color: #fff;
+}
+.bikash-md blockquote {
+  border-left: 2px solid rgba(215, 226, 234, 0.25);
+  padding-left: 10px;
+  color: rgba(215, 226, 234, 0.7);
+  font-style: italic;
+}
+.bikash-md table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.bikash-md th,
+.bikash-md td {
+  border: 1px solid rgba(215, 226, 234, 0.2);
+  padding: 4px 6px;
+  text-align: left;
+}
+.bikash-md th {
+  background: rgba(215, 226, 234, 0.08);
+}
+.bikash-md hr {
+  border: 0;
+  border-top: 1px solid rgba(215, 226, 234, 0.15);
+  margin: 8px 0;
+}
+
+/* Inline code */
+.bikash-md code:not(pre code) {
+  background: rgba(215, 226, 234, 0.12);
+  color: #f0d4f0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* Code blocks */
+.bikash-md pre {
+  margin: 6px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #1a1b26 !important;
+  border: 1px solid rgba(215, 226, 234, 0.12);
+  font-size: 12px;
+}
+.bikash-md pre code {
+  background: transparent !important;
+  padding: 10px 12px !important;
+  display: block;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+/* KaTeX sizing inside chat */
+.bikash-md .katex {
+  font-size: 1.05em;
+  color: #d7e2ea;
+}
+.bikash-md .katex-display {
+  margin: 8px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Resize handle */
+.bikash-resize-handle {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(215, 226, 234, 0.4) 40%,
+      rgba(215, 226, 234, 0.4) 45%,
+      transparent 45%,
+      transparent 60%,
+      rgba(215, 226, 234, 0.4) 60%,
+      rgba(215, 226, 234, 0.4) 65%,
+      transparent 65%
+    );
+  border-bottom-right-radius: 14px;
+  transition: background 120ms;
+}
+.bikash-resize-handle:hover {
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(182, 0, 168, 0.7) 40%,
+      rgba(182, 0, 168, 0.7) 45%,
+      transparent 45%,
+      transparent 60%,
+      rgba(182, 0, 168, 0.7) 60%,
+      rgba(182, 0, 168, 0.7) 65%,
+      transparent 65%
+    );
+}
