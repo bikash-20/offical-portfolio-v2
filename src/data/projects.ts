@@ -19,11 +19,6 @@ export interface Project {
   col2?: string;
 }
 
-const cdn = (key: string) =>
-  `https://images.higgs.ai/?default=1&output=webp&url=${encodeURIComponent(
-    `https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/${key}`
-  )}&w=1280&q=85`;
-
 export const projects: Project[] = [
   {
     id: 'nexora-ai',

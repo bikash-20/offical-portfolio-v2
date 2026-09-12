@@ -15,6 +15,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 gsap.registerPlugin(ScrollTrigger);
 
 let instance: Lenis | null = null;
+let visibilityHandler: (() => void) | null = null;
+let rafForInstance: ((time: number) => void) | null = null;
 
 export function startLenis(): Lenis {
   if (instance) return instance;
@@ -35,6 +37,7 @@ export function startLenis(): Lenis {
   const raf = (time: number) => {
     instance?.raf(time * 1000);
   };
+  rafForInstance = raf;
   gsap.ticker.add(raf);
   gsap.ticker.lagSmoothing(0);
 
@@ -45,6 +48,7 @@ export function startLenis(): Lenis {
       if (document.hidden) instance?.stop();
       else instance?.start();
     };
+    visibilityHandler = onVis;
     document.addEventListener('visibilitychange', onVis);
   }
 
@@ -57,9 +61,18 @@ export function getLenis(): Lenis | null {
 
 export function stopLenis(): void {
   if (!instance) return;
+  if (rafForInstance) {
+    gsap.ticker.remove(rafForInstance);
+    rafForInstance = null;
+  }
+  instance.off('scroll', ScrollTrigger.update);
   instance.destroy();
   instance = null;
   if (typeof document !== 'undefined') {
+    if (visibilityHandler) {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      visibilityHandler = null;
+    }
     document.documentElement.classList.remove('lenis');
   }
 }

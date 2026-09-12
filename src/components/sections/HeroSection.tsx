@@ -3,6 +3,7 @@ import FadeIn from '../ui/FadeIn';
 import ContactButton from '../ui/ContactButton';
 import { HERO_PORTRAIT_URL } from '../../data/profile';
 import { COLOR } from '../../lib/scale';
+import resumeUrl from '../../data/resume.pdf';
 
 const navLinks = [
   { label: 'About', href: '#about' },
@@ -125,8 +126,14 @@ export default function HeroSection() {
             a full-stack developer &amp; ai systems builder shipping production-grade products
           </p>
         </FadeIn>
-        <FadeIn delay={0.5} duration={0.7} y={20}>
-          <ContactButton href="#contact" label="Contact Me" />
+        <FadeIn delay={0.5} duration={0.7} y={20} className="flex flex-wrap justify-end gap-3">
+          <ContactButton
+            href={resumeUrl}
+            download="Bikash-Talukder-Resume.pdf"
+            label="Download Resume"
+            className="px-5 sm:px-6 md:px-8"
+          />
+          <ContactButton href="#contact" label="Contact Me" className="px-5 sm:px-6 md:px-8" />
         </FadeIn>
       </div>
     </main>

@@ -10,7 +10,7 @@ import AchievementsSection from './components/sections/AchievementsSection';
 import DashboardSection from './components/sections/DashboardSection';
 import InterestsSection from './components/sections/InterestsSection';
 import ContactSection from './components/sections/ContactSection';
-import { startLenis } from './lib/lenis';
+import { startLenis, stopLenis } from './lib/lenis';
 
 // Lazy-load the chatbot — it pulls in react-markdown, KaTeX, syntax
 // highlighting and the OpenRouter client. Keeping it out of the initial
@@ -20,6 +20,7 @@ const BikashAI = lazy(() => import('./components/widgets/bikash-ai'));
 export default function App() {
   useEffect(() => {
     startLenis();
+    return stopLenis;
   }, []);
 
   return (

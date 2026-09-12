@@ -2,6 +2,37 @@ import { useEffect, useRef, useState } from 'react';
 import { useScroll, useTransform, motion } from 'framer-motion';
 import type { CSSProperties } from 'react';
 
+function AnimatedChunk({
+  chunk,
+  index,
+  totalChunks,
+  scrollYProgress,
+  className,
+  onComplete,
+}: {
+  chunk: string;
+  index: number;
+  totalChunks: number;
+  scrollYProgress: ReturnType<typeof useScroll>['scrollYProgress'];
+  className?: string;
+  onComplete: () => void;
+}) {
+  const start = index / totalChunks;
+  const end = Math.min(1, (index + 1) / totalChunks + 0.02);
+  const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
+
+  return (
+    <motion.span
+      aria-hidden="true"
+      className={`inline ${className ?? ''}`}
+      style={{ opacity }}
+      onAnimationComplete={onComplete}
+    >
+      {chunk}
+    </motion.span>
+  );
+}
+
 interface AnimatedTextProps {
   text: string;
   className?: string;
@@ -61,24 +92,19 @@ export default function AnimatedText({
       className={className}
       style={{ ...style, willChange: done ? 'auto' : 'opacity' } as CSSProperties}
     >
-      {chunks.map((chunk, i) => {
-        const start = i / totalChunks;
-        const end = Math.min(1, (i + 1) / totalChunks + 0.02);
-        const opacity = useTransform(scrollYProgress, [start, end], [0.2, 1]);
-        return (
-          <motion.span
-            key={i}
-            aria-hidden="true"
-            className={`inline ${perCharClassName ?? ''}`}
-            style={{ opacity }}
-            onAnimationComplete={() => {
-              if (i === totalChunks - 1) setDone(true);
-            }}
-          >
-            {chunk}
-          </motion.span>
-        );
-      })}
+      {chunks.map((chunk, i) => (
+        <AnimatedChunk
+          key={i}
+          chunk={chunk}
+          index={i}
+          totalChunks={totalChunks}
+          scrollYProgress={scrollYProgress}
+          className={perCharClassName}
+          onComplete={() => {
+            if (i === totalChunks - 1) setDone(true);
+          }}
+        />
+      ))}
     </p>
   );
 }

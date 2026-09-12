@@ -30,7 +30,7 @@ function parseCodeBlock(raw: string): { lang: string; code: string } {
 }
 
 function CodeBlock({ className, children }: { className?: string; children?: React.ReactNode }) {
-  const [meta, ...rest] = (className ?? '').split(' ');
+  const [meta] = (className ?? '').split(' ');
   const lang = (meta || 'text').replace('language-', '');
   const code = useMemo(() => {
     const text = String(children ?? '').replace(/\n$/, '');

@@ -4,6 +4,7 @@ interface ContactButtonProps {
   label?: string;
   href?: string;
   onClick?: (e: MouseEvent<HTMLAnchorElement>) => void;
+  download?: string;
   className?: string;
   style?: CSSProperties;
   ariaLabel?: string;
@@ -21,6 +22,7 @@ export default function ContactButton({
   label = 'Contact Me',
   href = '#contact',
   onClick,
+  download,
   className = '',
   style,
   ariaLabel,
@@ -29,6 +31,7 @@ export default function ContactButton({
     <a
       href={href}
       onClick={onClick}
+      download={download}
       aria-label={ariaLabel ?? label}
       className={`inline-flex items-center justify-center rounded-full px-8 py-3 text-xs font-medium uppercase tracking-widest text-white sm:px-10 sm:py-3.5 sm:text-sm md:px-12 md:py-4 md:text-base transition-transform duration-200 hover:scale-[1.02] ${className}`}
       style={{ ...baseStyle, ...style }}

@@ -67,7 +67,7 @@ export default function ContactSection() {
       setName('');
       setEmail('');
       setMessage('');
-    } catch (err) {
+    } catch {
       setStatus('error');
     }
   };
