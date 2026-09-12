@@ -1,6 +1,8 @@
 # Bikash Talukder — Portfolio
 
 A single-page portfolio for **Bikash Talukder** — a 2nd-year Computer Science student at Metropolitan University (CGPA 3.65) and full-stack developer focused on AI-driven products.
+<img width="1280" height="714" alt="image" src="https://github.com/user-attachments/assets/cb0c5af0-16ee-40af-82af-8aaa5743c07e" />
+live:https://offical-portfolio-v2.vercel.app/
 
 Visually modeled after the "Jack -- 3D Creator" reference (dark `#0C0C0C` background, Kanit font, big gradient headings, scroll-driven marquee, sticky-stacking project cards, magnetic hero portrait) and adapted with Bikash's real content: skills grid, 13 production projects, achievements, live dashboard, interests, contact panel, and an "Opus" AI chat widget.
 
