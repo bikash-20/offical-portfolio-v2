@@ -1,12 +1,11 @@
 /**
  * Lenis smooth-scroll runtime.
  *
- * Mounts a single global Lenis instance with a RAF loop and bridges scroll
- * progress into GSAP's ScrollTrigger ticker so any Framer Motion sections
- * that use `useScroll` stay in sync.
- *
- * Importing this module also applies the `.lenis` class to <html> so the
- * CSS rules in index.css take effect (preventing native scrollbar doubling).
+ * Tuned for low-CPU scroll on long pages:
+ *  - Short duration so the easing curve settles within a frame or two.
+ *  - ScrollTrigger only ticks when Lenis actually scrolls (no idle work).
+ *  - Lenis is paused while the tab is hidden so background tabs don't burn CPU.
+ *  - RAF callback is throttled to gsap.ticker so we don't double-tick.
  */
 
 import Lenis from 'lenis';
@@ -21,24 +20,32 @@ export function startLenis(): Lenis {
   if (instance) return instance;
 
   instance = new Lenis({
-    duration: 1.2,
+    duration: 0.6,
     easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     smoothWheel: true,
-    wheelMultiplier: 1.0,
-    touchMultiplier: 1.4,
+    wheelMultiplier: 0.9,
+    touchMultiplier: 1.2,
+    // Don't waste CPU on sub-pixel updates.
+    lerp: 0.15,
   });
 
-  // Bridge Lenis -> ScrollTrigger so any GSAP-driven scroll animations update.
   instance.on('scroll', ScrollTrigger.update);
 
+  // Use gsap.ticker as the RAF source so we're already aligned with ScrollTrigger.
   const raf = (time: number) => {
-    instance?.raf(time);
+    instance?.raf(time * 1000);
   };
   gsap.ticker.add(raf);
   gsap.ticker.lagSmoothing(0);
 
+  // Pause when tab hidden.
   if (typeof document !== 'undefined') {
     document.documentElement.classList.add('lenis');
+    const onVis = () => {
+      if (document.hidden) instance?.stop();
+      else instance?.start();
+    };
+    document.addEventListener('visibilitychange', onVis);
   }
 
   return instance;

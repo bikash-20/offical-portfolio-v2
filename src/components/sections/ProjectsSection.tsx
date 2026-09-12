@@ -20,15 +20,24 @@ export default function ProjectsSection() {
       className="relative -mt-10 w-full rounded-t-[40px] bg-[#0C0C0C] z-10 sm:-mt-12 sm:rounded-t-[50px] md:-mt-14 md:rounded-t-[60px]"
     >
       <FadeIn delay={0} duration={0.7} y={30}>
-        <h2 className="hero-heading px-5 pb-12 pt-24 text-center font-black uppercase leading-none tracking-tight sm:px-8 sm:pb-16 md:px-10 md:pb-20" style={{ fontSize: 'clamp(3rem, 12vw, 10rem)' }}>
+        <h2
+          className="hero-heading px-5 pb-12 pt-24 text-center font-black uppercase leading-none tracking-tight sm:px-8 sm:pb-16 md:px-10 md:pb-20"
+          style={{ fontSize: 'clamp(3rem, 12vw, 10rem)' }}
+        >
           Project
         </h2>
       </FadeIn>
 
       <div className="relative mx-auto w-full max-w-6xl px-5 pb-32 sm:px-8 md:px-10">
         {featuredProjects.map((p, index) => {
-          const targetScale = 1 - (totalCards - 1 - index) * 0.03;
-          const range = [index * 0.25, 1];
+          // Each card gets its own scale range but the subscription is shared
+          // via the single `scrollYProgress` MotionValue, so we don't add
+          // per-card scroll listeners.
+          const range: [number, number] = [
+            Math.max(0, index * 0.18),
+            Math.min(1, (index + 1) * 0.18 + 0.1),
+          ];
+          const targetScale = 1 - (totalCards - 1 - index) * 0.02;
           const scale = useTransform(scrollYProgress, range, [1, targetScale]);
 
           return (
@@ -39,7 +48,7 @@ export default function ProjectsSection() {
             >
               <motion.div
                 className="relative flex h-full w-full flex-col overflow-hidden rounded-[40px] border-2 border-[#D7E2EA] bg-[#0C0C0C] p-4 sm:rounded-[50px] sm:p-6 md:rounded-[60px] md:p-8"
-                style={{ scale }}
+                style={{ scale, willChange: 'transform' }}
               >
                 {/* Top row */}
                 <div className="flex flex-col gap-4 border-b border-[#D7E2EA]/15 pb-4 sm:flex-row sm:items-end sm:justify-between md:pb-6">
@@ -86,6 +95,8 @@ export default function ProjectsSection() {
                   <img
                     src={p.thumbnail}
                     alt={`${p.name} screenshot`}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 h-full w-full object-cover"
                   />
                   {/* Bottom gradient + description */}

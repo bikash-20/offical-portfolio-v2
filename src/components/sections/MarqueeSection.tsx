@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useInView, useMotionValue, useTransform } from 'framer-motion';
 import { row1Images, row2Images } from '../../data/marquee';
 import { startLenis } from '../../lib/lenis';
 
@@ -9,15 +9,16 @@ function Tile({ src }: { src: string }) {
       src={src}
       alt=""
       loading="lazy"
+      decoding="async"
       draggable={false}
       className="h-[270px] w-[420px] flex-shrink-0 rounded-2xl object-cover"
-      style={{ willChange: 'transform' }}
     />
   );
 }
 
 export default function MarqueeSection() {
   const sectionRef = useRef<HTMLElement | null>(null);
+  const inView = useInView(sectionRef, { margin: '200px 0px' });
   const [sectionTop, setSectionTop] = useState(0);
 
   const x1 = useMotionValue(0);
@@ -36,10 +37,10 @@ export default function MarqueeSection() {
   }, []);
 
   useEffect(() => {
+    if (!inView) return; // Don't run scroll listener when off-screen.
     const lenis = startLenis();
     const onScroll = (e: { scroll: number }) => {
-      const offset =
-        (e.scroll - sectionTop + window.innerHeight) * 0.3;
+      const offset = (e.scroll - sectionTop + window.innerHeight) * 0.3;
       x1.set(offset - 200);
       x2.set(-(offset - 200));
     };
@@ -48,9 +49,8 @@ export default function MarqueeSection() {
     return () => {
       lenis.off('scroll', onScroll as never);
     };
-  }, [sectionTop, x1, x2]);
+  }, [inView, sectionTop, x1, x2]);
 
-  // Ensure we render at least one row even if scroll-driven values are 0.
   const fallbackX1 = useTransform(x1, (v) => v);
   const fallbackX2 = useTransform(x2, (v) => v);
 
@@ -64,7 +64,7 @@ export default function MarqueeSection() {
     >
       <motion.div
         className="flex w-max gap-3"
-        style={{ x: fallbackX1, willChange: 'transform' }}
+        style={{ x: fallbackX1, willChange: inView ? 'transform' : 'auto' }}
       >
         {row1.map((src, i) => (
           <Tile key={`r1-${i}`} src={src} />
@@ -73,7 +73,7 @@ export default function MarqueeSection() {
       <div className="h-3" />
       <motion.div
         className="flex w-max gap-3"
-        style={{ x: fallbackX2, willChange: 'transform' }}
+        style={{ x: fallbackX2, willChange: inView ? 'transform' : 'auto' }}
       >
         {row2.map((src, i) => (
           <Tile key={`r2-${i}`} src={src} />
