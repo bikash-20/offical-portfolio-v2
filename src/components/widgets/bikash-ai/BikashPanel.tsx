@@ -24,11 +24,18 @@ export default function BikashPanel({ state, size, onResize, onClose }: BikashPa
   const listRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
+  // Auto-scroll to the latest message whenever the list grows or the stream
+  // updates. Use `requestAnimationFrame` so the DOM has measured the new
+  // content first; otherwise scrollHeight can be stale by one frame and the
+  // auto-scroll can land in the middle of the latest message.
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.scrollTop = listRef.current.scrollHeight;
-    }
-  }, [messages]);
+    const id = requestAnimationFrame(() => {
+      if (listRef.current) {
+        listRef.current.scrollTop = listRef.current.scrollHeight;
+      }
+    });
+    return () => cancelAnimationFrame(id);
+  }, [messages, sending]);
 
   // Resize handle drag (bottom-right corner).
   useEffect(() => {
@@ -97,14 +104,30 @@ export default function BikashPanel({ state, size, onResize, onClose }: BikashPa
       />
 
       {!configured && (
-        <div className="border-b border-amber-400/20 bg-amber-400/5 px-4 py-2.5 text-[11px] leading-relaxed text-amber-200/90">
-          Add <code>VITE_OPENROUTER_API_KEY</code> to a
-          <code> .env.local</code> file and restart the dev server to enable
-          live responses.
+        <div className="shrink-0 border-b border-amber-400/20 bg-amber-400/5 px-4 py-2 text-[11px] leading-snug text-amber-200/90">
+          Add <code className="rounded bg-amber-400/10 px-1">VITE_OPENROUTER_API_KEY</code> to a
+          <code className="rounded bg-amber-400/10 px-1">.env.local</code> and restart the dev server.
         </div>
       )}
 
-      <div ref={listRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      {/*
+        Scroll region for messages.
+        `min-h-0` is critical — without it, flex children with `overflow-y-auto`
+        inherit the parent's intrinsic content height and never scroll.
+        `overscroll-behavior: contain` keeps wheel scroll from leaking into the
+        page below and `data-lenis-prevent` opts out of Lenis smoothing inside
+        the chat so the user gets crisp native scroll.
+      */}
+      <div
+        ref={listRef}
+        data-lenis-prevent
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4"
+        style={{
+          scrollbarGutter: 'stable',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(215,226,234,0.25) transparent',
+        }}
+      >
         {messages.map((m) => (
           <BikashMessage
             key={m.id}

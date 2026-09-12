@@ -6,11 +6,11 @@ export const GREETING =
   "Hey, I'm Bikash 👋 — your AI guide to my work. Ask me anything about my projects, skills, hackathons, or how we can build something together!";
 
 export const SUGGESTIONS = [
-  'What are your top 3 projects?',
-  'How does the Nexora AI compare lab work?',
-  'Which hackathons have you reached the finals of?',
-  'Can you show me a Python hello world?',
-  'What is $\\int x^2 \\, dx$?',
+  'Top 3 projects?',
+  'Nexora AI compare lab',
+  'Hackathons?',
+  'Python hello world',
+  '∫ x² dx',
 ];
 
 export const PANEL_SIZE_KEY = 'bikash:panel-size:v1';

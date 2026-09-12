@@ -79,6 +79,10 @@ html.lenis body {
   color: #d7e2ea;
   word-wrap: break-word;
   overflow-wrap: anywhere;
+  /* Important: contain the bubble's intrinsic width so wide code blocks
+     don't push the flex column wider than the panel. */
+  min-width: 0;
+  max-width: 100%;
 }
 .bikash-md > * + * {
   margin-top: 6px;
@@ -152,16 +156,19 @@ html.lenis body {
   border-radius: 4px;
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  word-break: break-word;
 }
 
 /* Code blocks */
 .bikash-md pre {
   margin: 6px 0;
   border-radius: 10px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   background: #1a1b26 !important;
   border: 1px solid rgba(215, 226, 234, 0.12);
   font-size: 12px;
+  max-width: 100%;
 }
 .bikash-md pre code {
   background: transparent !important;
@@ -169,6 +176,7 @@ html.lenis body {
   display: block;
   overflow-x: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre;
 }
 
 /* KaTeX sizing inside chat */

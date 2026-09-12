@@ -65,7 +65,7 @@ function CodeBlock({ className, children }: { className?: string; children?: Rea
 function BikashMessageInner({ role, content, streaming }: BikashMessageProps) {
   if (role === 'user') {
     return (
-      <div className="ml-auto max-w-[88%] rounded-2xl rounded-br-md bg-[#B600A8]/35 px-4 py-2.5 text-sm leading-relaxed text-white shadow-[0_4px_16px_rgba(182,0,168,0.25)]">
+      <div className="ml-auto max-w-[88%] min-w-0 rounded-2xl rounded-br-md bg-[#B600A8]/35 px-4 py-2.5 text-sm leading-relaxed text-white shadow-[0_4px_16px_rgba(182,0,168,0.25)] break-words">
         {content}
       </div>
     );
@@ -74,11 +74,11 @@ function BikashMessageInner({ role, content, streaming }: BikashMessageProps) {
   const isEmpty = !content && streaming;
 
   return (
-    <div className="mr-auto flex max-w-[92%] gap-2">
+    <div className="mr-auto flex max-w-[92%] min-w-0 gap-2">
       <div className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-[#18011F] via-[#7621B0] to-[#BE4C00] text-white">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <div className="bikash-md min-w-0 rounded-2xl rounded-bl-md bg-[#D7E2EA]/10 px-4 py-2.5 text-[#D7E2EA] shadow-[inset_0_0_0_1px_rgba(215,226,234,0.06)]">
+      <div className="bikash-md min-w-0 flex-1 rounded-2xl rounded-bl-md bg-[#D7E2EA]/10 px-4 py-2.5 text-[#D7E2EA] shadow-[inset_0_0_0_1px_rgba(215,226,234,0.06)]">
         {isEmpty ? (
           <span className="inline-flex items-center gap-1.5">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#D7E2EA]/70" />
