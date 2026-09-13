@@ -22,26 +22,60 @@ export type ModelChangeHandler = (model: string | null) => void;
 
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 const MODELS_ENDPOINT = 'https://openrouter.ai/api/v1/models';
-const CACHE_KEY = 'bikash:free-models:v1';
+const CACHE_KEY = 'bikash:free-models:v2'; // v2 = FreeModelMeta[] with `speed` rank
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
 /**
- * Safety net used if the live models endpoint is unreachable. These are the
- * most reliable free models as of mid-2026.
+ * Fast-tier free models — tried FIRST so the user gets a response in <1s
+ * instead of waiting on a 70B+ model to load.
+ *
+ * All entries are MoE with very low *active* parameter counts (3–12B),
+ * which is what actually drives token/sec on free inference endpoints.
+ *
+ * Each entry also carries an optional `speed` rank (lower = faster) so we
+ * can sort the live `/models` list the same way when the endpoint is up.
  */
-const FALLBACK_FREE_MODELS = [
-  'deepseek/deepseek-chat-v3.1:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'meta-llama/llama-3.1-8b-instruct:free',
-  'qwen/qwen-2.5-72b-instruct:free',
-  'google/gemini-2.0-flash-exp:free',
-  'mistralai/mistral-small-3.2-24b-instruct:free',
-  'mistralai/mistral-7b-instruct:free',
+export interface FreeModelMeta {
+  id: string;
+  /** Lower = faster. Drives the live-models sort order. */
+  speed: number;
+  /** Coarse parameter bucket shown in the UI tooltip. */
+  size: string;
+}
+
+/**
+ * Safety net used if the live models endpoint is unreachable. Ordered
+ * fastest → slowest. The last entries (70B/72B) only run if every fast
+ * model in the chain rate-limited or failed.
+ */
+const FALLBACK_FREE_MODELS: FreeModelMeta[] = [
+  // Tier 1 — sub-second on free tier (3B active)
+  { id: 'cohere/north-mini-code:free', speed: 1, size: '3B active' },
+  { id: 'nvidia/nemotron-3.5-lightning:free', speed: 2, size: '3B active' },
+
+  // Tier 2 — fast small MoE (5–12B active)
+  { id: 'inclusionai/ling-3.0-flash-fin:free', speed: 3, size: '5.1B active' },
+  { id: 'inclusionai/ling-3.0-flash-sante:free', speed: 4, size: '5.1B active' },
+  { id: 'poolside/laguna-xs-2.1:free', speed: 5, size: '3B active (FP8)' },
+  { id: 'thinkingmachines/inkling-small:free', speed: 6, size: '12B active' },
+  { id: 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free', speed: 7, size: '3B active' },
+
+  // Tier 3 — medium, still snappy
+  { id: 'google/gemini-2.0-flash-exp:free', speed: 8, size: '~8B' },
+  { id: 'mistralai/mistral-7b-instruct:free', speed: 9, size: '7B' },
+  { id: 'meta-llama/llama-3.1-8b-instruct:free', speed: 10, size: '8B' },
+
+  // Tier 4 — quality backstops. Last because they're slow on the free tier.
+  { id: 'mistralai/mistral-small-3.2-24b-instruct:free', speed: 11, size: '24B' },
+  { id: 'poolside/laguna-s-2.1:free', speed: 12, size: '8B active / 118B' },
+  { id: 'qwen/qwen-2.5-72b-instruct:free', speed: 13, size: '72B' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', speed: 14, size: '70B' },
+  { id: 'deepseek/deepseek-chat-v3.1:free', speed: 15, size: '685B MoE' },
 ];
 
 interface CachedModels {
   fetchedAt: number;
-  models: string[];
+  models: FreeModelMeta[];
 }
 
 interface RawModel {
@@ -50,19 +84,44 @@ interface RawModel {
   top_provider?: { context_length?: number };
 }
 
+/**
+ * Pick a `speed` rank for a model ID we don't recognize.
+ * Falls back to "slow" so unknown large models sort to the back.
+ */
+function inferSpeed(id: string): number {
+  // Prefer exact matches first (built-in safety-net table is authoritative).
+  const known = FALLBACK_FREE_MODELS.find((m) => m.id === id);
+  if (known) return known.speed;
+
+  const lower = id.toLowerCase();
+  // Heuristics for new free models we haven't catalogued.
+  if (/nano|mini|flash|lightning|xs-|small/.test(lower)) return 6;
+  if (/-7b\b/.test(lower)) return 9;
+  if (/-8b\b/.test(lower)) return 10;
+  if (/-12b\b/.test(lower)) return 6;
+  if (/-24b\b/.test(lower)) return 11;
+  if (/70b|72b/.test(lower)) return 14;
+  return 12; // unknown — middle of the pack
+}
+
 function readCache(): CachedModels | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as CachedModels;
     if (!Array.isArray(parsed.models)) return null;
+    // Defensive: v1 cache stored plain strings, v2 stores {id,speed,size}.
+    // If anything looks like a plain string, drop the cache and refetch.
+    if (parsed.models.length > 0 && typeof parsed.models[0] === 'string') {
+      return null;
+    }
     return parsed;
   } catch {
     return null;
   }
 }
 
-function writeCache(models: string[]): void {
+function writeCache(models: FreeModelMeta[]): void {
   try {
     const payload: CachedModels = { fetchedAt: Date.now(), models };
     localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
@@ -82,8 +141,11 @@ function isFree(m: RawModel): boolean {
  * Fetch the current list of free OpenRouter models. Cached for 1 hour.
  * On any failure, returns the hardcoded FALLBACK_FREE_MODELS so the chat
  * still works offline / behind firewalls.
+ *
+ * Live results are sorted by `speed` (fastest first), NOT by context length,
+ * so the cascade hits a 3B-active model in <1s instead of a 70B model in ~30s.
  */
-export async function fetchFreeModels(): Promise<string[]> {
+export async function fetchFreeModels(): Promise<FreeModelMeta[]> {
   const cached = readCache();
   if (cached && Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
     return cached.models;
@@ -97,12 +159,12 @@ export async function fetchFreeModels(): Promise<string[]> {
     const data = (await res.json()) as { data?: RawModel[] };
     const free = (data.data ?? [])
       .filter(isFree)
-      .sort(
-        (a, b) =>
-          (b.top_provider?.context_length ?? 0) -
-          (a.top_provider?.context_length ?? 0)
-      )
-      .map((m) => m.id);
+      .map<FreeModelMeta>((m) => ({
+        id: m.id,
+        speed: inferSpeed(m.id),
+        size: 'unknown',
+      }))
+      .sort((a, b) => a.speed - b.speed);
     if (free.length === 0) throw new Error('No free models returned');
     writeCache(free);
     return free;
@@ -118,6 +180,11 @@ export function isOpenRouterConfigured(): boolean {
 /**
  * Cascade through free models until one succeeds. `onModelChange` fires
  * whenever a new model takes over the conversation.
+ *
+ * Models are tried in `speed` order — the smallest, fastest `:free` models
+ * (3B-active MoE) are hit first so the user typically sees the first token
+ * in under a second. Larger 70B+ models are only consulted if every faster
+ * model rate-limited or errored.
  */
 export async function chatWithCascade(
   messages: ChatMessage[],
@@ -132,9 +199,9 @@ export async function chatWithCascade(
   const models = await fetchFreeModels();
   let lastError: unknown = null;
 
-  for (const model of models) {
+  for (const meta of models) {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
-    onModelChange?.(model);
+    onModelChange?.(meta.id);
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
@@ -146,7 +213,7 @@ export async function chatWithCascade(
           'X-Title': 'Bikash Talukder Portfolio',
         },
         body: JSON.stringify({
-          model,
+          model: meta.id,
           messages,
           temperature: 0.7,
           max_tokens: 1200,
@@ -154,14 +221,14 @@ export async function chatWithCascade(
       });
 
       if (!res.ok) {
-        lastError = new Error(`Model ${model} → HTTP ${res.status}`);
+        lastError = new Error(`Model ${meta.id} → HTTP ${res.status}`);
         continue;
       }
 
       const data = await res.json();
       const text = data?.choices?.[0]?.message?.content;
       if (text) return text as string;
-      lastError = new Error(`Model ${model} returned no content`);
+      lastError = new Error(`Model ${meta.id} returned no content`);
     } catch (err) {
       if ((err as Error).name === 'AbortError') throw err;
       lastError = err;

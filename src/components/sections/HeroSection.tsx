@@ -65,17 +65,19 @@ export default function HeroSection() {
         </FadeIn>
 
         {/* Headline — full-width centered. No overlap with card.
-            Font-size is fluid and capped so the headline always fits the row. */}
+            Font-size is fluid and capped so the headline always fits the row.
+            `whitespace-normal` (with `text-balance`) lets it wrap on narrow
+            viewports instead of being clipped by the parent. */}
         <FadeIn
           delay={0.15}
           duration={0.7}
           y={40}
-          className="relative z-10 mx-auto w-full max-w-full overflow-hidden text-center"
+          className="relative z-10 mx-auto w-full max-w-full text-center"
         >
           <h1
-            className="block w-full whitespace-nowrap text-center font-black uppercase leading-[0.92] tracking-[-0.04em]"
+            className="block w-full text-center font-black uppercase leading-[0.95] tracking-[-0.04em] text-balance"
             style={{
-              fontSize: 'clamp(2rem, 8.2vw, 9.5rem)',
+              fontSize: 'clamp(2rem, 7.2vw, 7.5rem)',
               color: '#BBCCD7',
             }}
           >
